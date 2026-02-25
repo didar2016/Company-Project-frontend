@@ -33,6 +33,7 @@ export interface Room {
   bedType: BedType;
   size: number;
   basePrice: number;
+  discountPrice?: number;
   mainImage: string;
   discountPercentage?: string;
   detailImages: string[];
@@ -40,6 +41,7 @@ export interface Room {
   amenities: string[];
   features: string[];
   servicesIncluded: string[];
+  popularFacilities: string[];
   isAvailable: boolean;
 }
 
@@ -59,6 +61,7 @@ export interface HeroSection {
   image: string;
   text: string;
   subText: string;
+  detailsText?: string;
   isActive: boolean;
 }
 

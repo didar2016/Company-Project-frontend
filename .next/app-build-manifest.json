@@ -30,21 +30,6 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/(dashboard)/dashboard/rooms/page.js"
-    ],
-    "/(dashboard)/dashboard/our-story/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(dashboard)/dashboard/our-story/page.js"
-    ],
-    "/(dashboard)/dashboard/facilities/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(dashboard)/dashboard/facilities/page.js"
-    ],
-    "/(dashboard)/dashboard/reviews/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(dashboard)/dashboard/reviews/page.js"
     ]
   }
 }

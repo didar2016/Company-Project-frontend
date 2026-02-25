@@ -12,24 +12,25 @@ import {
   X,
   Upload,
   Percent,
+  Waves,
+  Wine,
+  Wifi,
+  Dumbbell,
+  Home,
+  Coffee,
+  Utensils,
+  Car,
+  CheckSquare,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { websiteApi } from '@/lib/api';
+import { websiteApi, imageApi, getImageUrl } from '@/lib/api';
 import { Room } from '@/types';
 import { toast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/stores';
-
-const fileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = (error) => reject(error);
-  });
-};
 
 interface RoomFormData {
   name: string;
@@ -38,14 +39,28 @@ interface RoomFormData {
   bedType: string;
   size: number;
   basePrice: number;
+  discountPrice: number;
   mainImage: string;
   discountPercentage: string;
   detailImages: string[];
   amenities: string[];
   features: string[];
   servicesIncluded: string[];
+  popularFacilities: string[];
   isAvailable: boolean;
 }
+
+const ALL_FACILITIES = [
+  { id: 'swimming-pools', label: 'Swimming Pools', icon: Waves },
+  { id: 'bar', label: 'Bar', icon: Wine },
+  { id: 'free-wifi', label: 'Free Wifi', icon: Wifi },
+  { id: 'fitness-centre', label: 'Fitness Centre', icon: Dumbbell },
+  { id: '45-sqm', label: '45 sqm', icon: Home },
+  { id: 'coffee', label: 'Coffee', icon: Coffee },
+  { id: 'kitchen', label: 'Kitchen', icon: Utensils },
+  { id: 'free-parking', label: 'Free Parking', icon: Car },
+  { id: 'beachfront', label: 'Beachfront', icon: Home },
+];
 
 const emptyForm: RoomFormData = {
   name: '',
@@ -54,12 +69,14 @@ const emptyForm: RoomFormData = {
   bedType: 'Double',
   size: 300,
   basePrice: 100,
+  discountPrice: 0,
   mainImage: '',
   discountPercentage: '',
   detailImages: [],
   amenities: [],
   features: [],
   servicesIncluded: [],
+  popularFacilities: [],
   isAvailable: true,
 };
 
@@ -120,12 +137,14 @@ export default function RoomsPage() {
       bedType: room.bedType,
       size: room.size,
       basePrice: room.basePrice,
+      discountPrice: room.discountPrice || 0,
       mainImage: room.mainImage || '',
       discountPercentage: room.discountPercentage || '',
       detailImages: room.detailImages || [],
       amenities: room.amenities || [],
       features: room.features || [],
       servicesIncluded: room.servicesIncluded || [],
+      popularFacilities: room.popularFacilities || [],
       isAvailable: room.isAvailable,
     });
     setShowModal(true);
@@ -133,18 +152,18 @@ export default function RoomsPage() {
 
   const handleMainImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !websiteId) return;
     try {
-      const base64 = await fileToBase64(file);
-      setFormData((prev) => ({ ...prev, mainImage: base64 }));
+      const url = await imageApi.upload(file, websiteId);
+      setFormData((prev) => ({ ...prev, mainImage: url }));
     } catch {
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to process image' });
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to upload image' });
     }
   };
 
   const handleDetailImagesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files) return;
+    if (!files || !websiteId) return;
     const currentCount = formData.detailImages.length;
     const remaining = 10 - currentCount;
     if (remaining <= 0) {
@@ -153,13 +172,13 @@ export default function RoomsPage() {
     }
     const filesToProcess = Array.from(files).slice(0, remaining);
     try {
-      const base64Images = await Promise.all(filesToProcess.map(fileToBase64));
+      const urls = await imageApi.uploadMultiple(filesToProcess, websiteId!);
       setFormData((prev) => ({
         ...prev,
-        detailImages: [...prev.detailImages, ...base64Images],
+        detailImages: [...prev.detailImages, ...urls],
       }));
     } catch {
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to process images' });
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to upload images' });
     }
   };
 
@@ -286,9 +305,23 @@ export default function RoomsPage() {
           <Card key={room._id} className="overflow-hidden">
             <div className="h-40 bg-gradient-to-br from-primary/20 to-primary/5 relative">
               {room.mainImage ? (
-                <img src={room.mainImage} alt={room.name} className="w-full h-full object-cover" />
+                <Image
+                  src={getImageUrl(room.mainImage)}
+                  alt={room.name}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  quality={90}
+                  className="object-cover"
+                />
               ) : room.images?.[0] ? (
-                <img src={room.images[0]} alt={room.name} className="w-full h-full object-cover" />
+                <Image
+                  src={getImageUrl(room.images[0])}
+                  alt={room.name}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  quality={90}
+                  className="object-cover"
+                />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <BedDouble className="h-12 w-12 text-muted-foreground" />
@@ -324,9 +357,16 @@ export default function RoomsPage() {
                 <div className="flex items-center gap-2 text-sm">
                   <span className="text-muted-foreground">{room.size} sq ft</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm font-bold text-primary">
-                  <DollarSign className="h-4 w-4" />
-                  <span>{room.basePrice}/night</span>
+                <div className="flex items-center gap-2 text-sm font-bold">
+                  <DollarSign className="h-4 w-4 text-primary" />
+                  {room.discountPrice && room.discountPrice > 0 ? (
+                    <div className="flex flex-col">
+                      <span className="text-primary">{room.discountPrice}/night</span>
+                      <span className="text-xs text-muted-foreground line-through">${room.basePrice}/night</span>
+                    </div>
+                  ) : (
+                    <span className="text-primary">{room.basePrice}/night</span>
+                  )}
                 </div>
               </div>
 
@@ -342,6 +382,9 @@ export default function RoomsPage() {
                 )}
                 {room.servicesIncluded?.length > 0 && (
                   <span className="text-xs bg-muted px-2 py-1 rounded">{room.servicesIncluded.length} services</span>
+                )}
+                {room.popularFacilities?.length > 0 && (
+                  <span className="text-xs bg-muted px-2 py-1 rounded">{room.popularFacilities.length} facilities</span>
                 )}
               </div>
 
@@ -395,7 +438,14 @@ export default function RoomsPage() {
                 >
                   {formData.mainImage ? (
                     <div className="relative w-full">
-                      <img src={formData.mainImage} alt="Main" className="w-full h-48 object-cover rounded-lg" />
+                      <Image
+                        src={getImageUrl(formData.mainImage)}
+                        alt="Main"
+                        width={1200}
+                        height={500}
+                        quality={90}
+                        className="w-full h-48 object-cover rounded-lg"
+                      />
                       <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-6 w-6"
                         onClick={(e) => { e.stopPropagation(); setFormData((prev) => ({ ...prev, mainImage: '' })); }}>
                         <X className="h-3 w-3" />
@@ -412,7 +462,7 @@ export default function RoomsPage() {
               </div>
 
               {/* Discount Percentage */}
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label htmlFor="discountPercentage">Discount Percentage (optional)</Label>
                 <div className="relative">
                   <Input id="discountPercentage" value={formData.discountPercentage}
@@ -420,7 +470,7 @@ export default function RoomsPage() {
                     placeholder="e.g. 20% OFF" />
                   <Percent className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 </div>
-              </div>
+              </div> */}
 
               {/* Basic Info */}
               <div className="space-y-2">
@@ -458,6 +508,25 @@ export default function RoomsPage() {
                     onChange={(e) => setFormData({ ...formData, basePrice: parseInt(e.target.value) || 0 })} />
                 </div>
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="discountPrice">Discount Price ($)</Label>
+                  <Input id="discountPrice" type="number" min={0} max={formData.basePrice} value={formData.discountPrice}
+                    onChange={(e) => setFormData({ ...formData, discountPrice: parseInt(e.target.value) || 0 })} 
+                    placeholder="Enter discount price" />
+                  <p className="text-xs text-muted-foreground">Must be less than base price</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="discountPercentage">Discount Percentage</Label>
+                  <div className="relative">
+                    <Input id="discountPercentage" value={formData.discountPercentage}
+                      onChange={(e) => setFormData({ ...formData, discountPercentage: e.target.value })}
+                      placeholder="e.g. 20% OFF" />
+                    <Percent className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <p className="text-xs text-muted-foreground">Optional promotional text</p>
+                </div>
+              </div>
               <div className="flex items-center gap-2">
                 <input type="checkbox" id="isAvailable" checked={formData.isAvailable}
                   onChange={(e) => setFormData({ ...formData, isAvailable: e.target.checked })} className="rounded border-input" />
@@ -473,7 +542,14 @@ export default function RoomsPage() {
                 <div className="grid grid-cols-5 gap-2">
                   {formData.detailImages.map((img, index) => (
                     <div key={index} className="relative group aspect-square">
-                      <img src={img} alt={`Detail ${index + 1}`} className="w-full h-full object-cover rounded-lg border" />
+                    <Image
+                      src={getImageUrl(img)}
+                      alt={`Detail ${index + 1}`}
+                      width={400}
+                      height={400}
+                      quality={90}
+                      className="w-full h-full object-cover rounded-lg border"
+                    />
                       <Button variant="destructive" size="icon"
                         className="absolute top-1 right-1 h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
                         onClick={() => removeDetailImage(index)}>
@@ -529,6 +605,57 @@ export default function RoomsPage() {
                       <button type="button" onClick={() => removeFromList('features', index)} className="hover:text-destructive"><X className="h-3 w-3" /></button>
                     </span>
                   ))}
+                </div>
+              </div>
+
+              {/* Popular Facilities */}
+              <div className="space-y-2">
+                <Label>Popular Facilities</Label>
+                <p className="text-xs text-muted-foreground">Select the facilities available for this room</p>
+                <div className="grid grid-cols-2 gap-3 mt-2">
+                  {ALL_FACILITIES.map((facility) => {
+                    const isSelected = formData.popularFacilities.includes(facility.id);
+                    const IconComponent = facility.icon;
+                    return (
+                      <label
+                        key={facility.id}
+                        className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+                          isSelected
+                            ? 'border-primary bg-primary/10 shadow-sm'
+                            : 'border-muted hover:border-primary/40 hover:bg-muted/50'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFormData((prev) => ({
+                                ...prev,
+                                popularFacilities: [...prev.popularFacilities, facility.id],
+                              }));
+                            } else {
+                              setFormData((prev) => ({
+                                ...prev,
+                                popularFacilities: prev.popularFacilities.filter((f) => f !== facility.id),
+                              }));
+                            }
+                          }}
+                          className="rounded border-input h-4 w-4 accent-primary"
+                        />
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          isSelected ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
+                        }`}>
+                          <IconComponent className="w-4 h-4" />
+                        </div>
+                        <span className={`text-sm font-medium ${
+                          isSelected ? 'text-primary' : 'text-foreground'
+                        }`}>
+                          {facility.label}
+                        </span>
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
 

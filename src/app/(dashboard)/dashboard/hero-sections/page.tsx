@@ -16,18 +16,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuthStore } from '@/stores';
-import { websiteApi } from '@/lib/api';
+import { websiteApi, imageApi, getImageUrl } from '@/lib/api';
 import { HeroSection, HeroPageType } from '@/types';
 import { toast } from '@/hooks/use-toast';
-
-const fileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = (error) => reject(error);
-  });
-};
+import Image from 'next/image';
 
 const PAGE_OPTIONS: { value: HeroPageType; label: string; description: string }[] = [
   { value: 'home', label: 'Home Page', description: 'Main landing page hero banner' },
@@ -44,9 +36,10 @@ interface FormState {
   image: string;
   text: string;
   subText: string;
+  detailsText: string;
 }
 
-const emptyForm: FormState = { image: '', text: '', subText: '' };
+const emptyForm: FormState = { image: '', text: '', subText: '', detailsText: '' };
 
 export default function HeroSectionsPage() {
   const { user } = useAuthStore();
@@ -85,7 +78,7 @@ export default function HeroSectionsPage() {
       PAGE_OPTIONS.forEach((p) => {
         const existing = sections.find((s) => s.page === p.value);
         newForms[p.value] = existing
-          ? { image: existing.image || '', text: existing.text || '', subText: existing.subText || '' }
+          ? { image: existing.image || '', text: existing.text || '', subText: existing.subText || '', detailsText: existing.detailsText || '' }
           : { ...emptyForm };
       });
       setForms(newForms as Record<HeroPageType, FormState>);
@@ -98,12 +91,12 @@ export default function HeroSectionsPage() {
 
   const handleImageChange = async (page: HeroPageType, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !websiteId) return;
     try {
-      const base64 = await fileToBase64(file);
-      updateForm(page, 'image', base64);
+      const url = await imageApi.upload(file, websiteId);
+      updateForm(page, 'image', url);
     } catch {
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to process image' });
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to upload image' });
     }
   };
 
@@ -117,6 +110,7 @@ export default function HeroSectionsPage() {
         image: form.image,
         text: form.text,
         subText: form.subText,
+        detailsText: form.detailsText,
       });
       await fetchHeroSections();
       toast({
@@ -224,7 +218,7 @@ export default function HeroSectionsPage() {
 
                 {isExpanded && (
                   <CardContent className="space-y-4 pt-0">
-                    {/* Hero Image Upload (base64) */}
+                    {/* Hero Image Upload */}
                     <div className="space-y-2">
                       <Label>Hero Image</Label>
                       <div
@@ -233,10 +227,13 @@ export default function HeroSectionsPage() {
                       >
                         {form.image ? (
                           <div className="relative w-full">
-                            <img
-                              src={form.image}
+                            <Image
+                              src={getImageUrl(form.image)}
                               alt="Hero preview"
-                              className="w-full h-48 object-cover rounded-lg"
+                              className="w-full h-98 object-cover rounded-lg"
+                              width={1920}
+                              height={1080}
+                              quality={90}
                               onError={(e) => {
                                 (e.target as HTMLImageElement).style.display = 'none';
                               }}
@@ -289,6 +286,20 @@ export default function HeroSectionsPage() {
                         placeholder="Experience luxury and comfort in the heart of the city"
                       />
                     </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor={`detailstext-${pageOpt.value}`}>Hero Details Text</Label>
+                      <textarea
+                        id={`detailstext-${pageOpt.value}`}
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[100px] resize-y"
+                        value={form.detailsText}
+                        onChange={(e) => updateForm(pageOpt.value, 'detailsText', e.target.value)}
+                        placeholder="Detailed description about the page, services, or features that complement the main hero content"
+                      />
+                      <p className="text-xs text-muted-foreground">Additional descriptive text for enhanced page context</p>
+                    </div>
+
+                    
 
                     <div className="flex items-center gap-2 pt-2">
                       <Button onClick={() => handleSave(pageOpt.value)} disabled={isSaving}>

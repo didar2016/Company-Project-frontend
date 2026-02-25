@@ -12,23 +12,15 @@ import {
   MessageSquare,
   User,
 } from 'lucide-react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { websiteApi } from '@/lib/api';
+import { websiteApi, imageApi, getImageUrl } from '@/lib/api';
 import { Review } from '@/types';
 import { toast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/stores';
-
-const fileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = (error) => reject(error);
-  });
-};
 
 interface ReviewFormData {
   avatar: string;
@@ -114,12 +106,12 @@ export default function ReviewsPage() {
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !websiteId) return;
     try {
-      const base64 = await fileToBase64(file);
-      setFormData((prev) => ({ ...prev, avatar: base64 }));
+      const url = await imageApi.upload(file, websiteId);
+      setFormData((prev) => ({ ...prev, avatar: url }));
     } catch {
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to process image' });
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to upload image' });
     }
   };
 
@@ -226,7 +218,14 @@ export default function ReviewsPage() {
             <CardContent className="pt-6">
               <div className="flex items-center gap-3 mb-4">
                 {review.avatar ? (
-                  <img src={review.avatar} alt={review.name} className="h-12 w-12 rounded-full object-cover border-2 border-primary/20" />
+                  <Image
+                    src={getImageUrl(review.avatar)}
+                    alt={review.name}
+                    width={96}
+                    height={96}
+                    quality={90}
+                    className="h-12 w-12 rounded-full object-cover border-2 border-primary/20"
+                  />
                 ) : (
                   <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
                     <User className="h-6 w-6 text-primary" />
@@ -291,7 +290,14 @@ export default function ReviewsPage() {
                     onClick={() => avatarRef.current?.click()}
                   >
                     {formData.avatar ? (
-                      <img src={formData.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                      <Image
+                        src={getImageUrl(formData.avatar)}
+                        alt="Avatar"
+                        width={200}
+                        height={200}
+                        quality={90}
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
                       <Upload className="h-6 w-6 text-muted-foreground" />
                     )}

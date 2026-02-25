@@ -4,6 +4,7 @@ import { Bell, Search, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuthStore } from '@/stores';
+import Image from 'next/image';
 
 interface HeaderProps {
   title?: string;
@@ -66,9 +67,12 @@ export function Header({ title, breadcrumbs }: HeaderProps) {
         {/* User menu */}
         <Button variant="ghost" size="icon" className="rounded-full">
           {user?.avatar ? (
-            <img
+            <Image
               src={user.avatar}
               alt={user.name}
+              width={80}
+              height={80}
+              quality={90}
               className="h-8 w-8 rounded-full object-cover"
             />
           ) : (

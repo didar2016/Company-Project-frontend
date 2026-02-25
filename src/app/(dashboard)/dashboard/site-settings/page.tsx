@@ -5,18 +5,10 @@ import { Save, Loader2, Upload, X, ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { websiteApi } from '@/lib/api';
+import { websiteApi, imageApi, getImageUrl } from '@/lib/api';
 import { toast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/stores';
-
-const fileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = (error) => reject(error);
-  });
-};
+import Image from 'next/image';
 
 export default function SiteSettingsPage() {
   const { user } = useAuthStore();
@@ -60,23 +52,23 @@ export default function SiteSettingsPage() {
 
   const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !websiteId) return;
     try {
-      const base64 = await fileToBase64(file);
-      setLogo(base64);
+      const url = await imageApi.upload(file, websiteId);
+      setLogo(url);
     } catch {
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to process image' });
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to upload image' });
     }
   };
 
   const handleFooterLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !websiteId) return;
     try {
-      const base64 = await fileToBase64(file);
-      setFooterLogo(base64);
+      const url = await imageApi.upload(file, websiteId);
+      setFooterLogo(url);
     } catch {
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to process image' });
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to upload image' });
     }
   };
 
@@ -131,7 +123,7 @@ export default function SiteSettingsPage() {
               <ImageIcon className="h-5 w-5" />
               Website Logo
             </CardTitle>
-            <CardDescription>Upload your website header logo (base64)</CardDescription>
+            <CardDescription>Upload your website header logo</CardDescription>
           </CardHeader>
           <CardContent>
             <div
@@ -140,10 +132,13 @@ export default function SiteSettingsPage() {
             >
               {logo ? (
                 <div className="relative w-full flex justify-center">
-                  <img
-                    src={logo}
+                  <Image
+                    src={getImageUrl(logo)}
                     alt="Logo"
-                    className="max-h-40 object-contain rounded"
+                    width={800}
+                    height={320}
+                    quality={90}
+                    className="max-h-40 w-auto object-contain rounded"
                   />
                   <Button
                     variant="destructive"
@@ -182,7 +177,7 @@ export default function SiteSettingsPage() {
               <ImageIcon className="h-5 w-5" />
               Footer Logo
             </CardTitle>
-            <CardDescription>Upload your website footer logo (base64)</CardDescription>
+            <CardDescription>Upload your website footer logo</CardDescription>
           </CardHeader>
           <CardContent>
             <div
@@ -191,10 +186,13 @@ export default function SiteSettingsPage() {
             >
               {footerLogo ? (
                 <div className="relative w-full flex justify-center">
-                  <img
-                    src={footerLogo}
+                  <Image
+                    src={getImageUrl(footerLogo)}
                     alt="Footer Logo"
-                    className="max-h-40 object-contain rounded"
+                    width={800}
+                    height={320}
+                    quality={90}
+                    className="max-h-40 w-auto object-contain rounded"
                   />
                   <Button
                     variant="destructive"

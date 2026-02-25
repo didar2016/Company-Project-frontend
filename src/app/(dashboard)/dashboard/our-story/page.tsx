@@ -9,23 +9,15 @@ import {
   Save,
   ImageIcon,
 } from 'lucide-react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { websiteApi } from '@/lib/api';
+import { websiteApi, imageApi, getImageUrl } from '@/lib/api';
 import { OurStory } from '@/types';
 import { toast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/stores';
-
-const fileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = (error) => reject(error);
-  });
-};
 
 interface StoryFormData {
   title: string;
@@ -82,7 +74,7 @@ export default function OurStoryPage() {
 
   const handleImagesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files) return;
+    if (!files || !websiteId) return;
     const currentCount = formData.images.length;
     const remaining = 20 - currentCount;
     if (remaining <= 0) {
@@ -91,13 +83,13 @@ export default function OurStoryPage() {
     }
     const filesToProcess = Array.from(files).slice(0, remaining);
     try {
-      const base64Images = await Promise.all(filesToProcess.map(fileToBase64));
+      const urls = await imageApi.uploadMultiple(filesToProcess, websiteId!);
       setFormData((prev) => ({
         ...prev,
-        images: [...prev.images, ...base64Images],
+        images: [...prev.images, ...urls],
       }));
     } catch {
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to process images' });
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to upload images' });
     }
   };
 
@@ -210,7 +202,14 @@ export default function OurStoryPage() {
             <div className="grid grid-cols-5 gap-2">
               {formData.images.map((img, index) => (
                 <div key={index} className="relative group aspect-square">
-                  <img src={img} alt={`Image ${index + 1}`} className="w-full h-full object-cover rounded-lg border" />
+                  <Image
+                    src={getImageUrl(img)}
+                    alt={`Image ${index + 1}`}
+                    width={600}
+                    height={600}
+                    quality={90}
+                    className="w-full h-full object-cover rounded-lg border"
+                  />
                   <Button variant="destructive" size="icon"
                     className="absolute top-1 right-1 h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
                     onClick={() => removeImage(index)}>

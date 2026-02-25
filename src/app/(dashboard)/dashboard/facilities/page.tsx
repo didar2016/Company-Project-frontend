@@ -12,22 +12,14 @@ import {
   ImageIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { websiteApi } from '@/lib/api';
+import { websiteApi, imageApi, getImageUrl } from '@/lib/api';
 import { Facility } from '@/types';
 import { toast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/stores';
-
-const fileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = (error) => reject(error);
-  });
-};
 
 interface FacilityFormData {
   image: string;
@@ -100,12 +92,12 @@ export default function FacilitiesPage() {
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !websiteId) return;
     try {
-      const base64 = await fileToBase64(file);
-      setFormData((prev) => ({ ...prev, image: base64 }));
+      const url = await imageApi.upload(file, websiteId);
+      setFormData((prev) => ({ ...prev, image: url }));
     } catch {
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to process image' });
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to upload image' });
     }
   };
 
@@ -183,7 +175,14 @@ export default function FacilitiesPage() {
           <Card key={facility._id} className="overflow-hidden">
             <div className="h-40 bg-gradient-to-br from-primary/20 to-primary/5 relative">
               {facility.image ? (
-                <img src={facility.image} alt={facility.title} className="w-full h-full object-cover" />
+                <Image
+                  src={getImageUrl(facility.image)}
+                  alt={facility.title}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  quality={90}
+                  className="object-cover"
+                />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <Building className="h-12 w-12 text-muted-foreground" />
@@ -248,7 +247,14 @@ export default function FacilitiesPage() {
                 >
                   {formData.image ? (
                     <div className="relative w-full">
-                      <img src={formData.image} alt="Facility" className="w-full h-48 object-cover rounded-lg" />
+                      <Image
+                        src={getImageUrl(formData.image)}
+                        alt="Facility"
+                        width={1200}
+                        height={500}
+                        quality={90}
+                        className="w-full h-48 object-cover rounded-lg"
+                      />
                       <Button variant="destructive" size="icon" className="absolute top-2 right-2 h-6 w-6"
                         onClick={(e) => { e.stopPropagation(); setFormData((prev) => ({ ...prev, image: '' })); }}>
                         <X className="h-3 w-3" />

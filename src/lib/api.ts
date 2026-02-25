@@ -1,7 +1,7 @@
 ﻿import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { toast } from '@/hooks/use-toast';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL = 'http://localhost:5000/api';
 
 // Create axios instance
 const api: AxiosInstance = axios.create({
@@ -227,6 +227,52 @@ export const uploadApi = {
   deleteImage: (filename: string, websiteId?: string) =>
     api.delete(`/upload/${filename}`, { params: { websiteId } }),
   listImages: (websiteId: string) => api.get(`/upload/list/${websiteId}`),
+};
+
+// Image upload helpers for website public folder
+export const imageApi = {
+  /**
+   * Upload a single image file to the website's public folder.
+   * Returns the relative URL path (e.g. "/public/hotel-name/uuid.jpg").
+   */
+  upload: async (file: File, websiteId: string): Promise<string> => {
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('websiteId', websiteId);
+    const response = await api.post('/upload/website-image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data.data.url;
+  },
+
+  /**
+   * Upload multiple image files to the website's public folder.
+   * Returns an array of relative URL paths.
+   */
+  uploadMultiple: async (files: File[], websiteId: string): Promise<string[]> => {
+    const formData = new FormData();
+    files.forEach((file) => formData.append('images', file));
+    formData.append('websiteId', websiteId);
+    const response = await api.post('/upload/website-images', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data.data.urls;
+  },
+};
+
+/**
+ * Convert a stored image path to a full URL accessible from the browser.
+ * Handles backward compatibility with base64 data URLs.
+ */
+export const getImageUrl = (imagePath: string): string => {
+  if (!imagePath) return '';
+  // Backward compat: base64 data URLs work as-is
+  if (imagePath.startsWith('data:')) return imagePath;
+  // Already a full URL
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) return imagePath;
+  // Relative path from backend — prepend backend base URL
+  const backendUrl = (process.env.NEXT_PUBLIC_IMAGE_URL || 'http://localhost:5000/').replace(/\/api\/?$/, '');
+  return `${backendUrl}${imagePath}`;
 };
 
 // Public API (no authentication required - for external websites)
