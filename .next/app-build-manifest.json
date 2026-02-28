@@ -26,10 +26,10 @@
       "static/chunks/main-app.js",
       "static/chunks/app/(dashboard)/layout.js"
     ],
-    "/(dashboard)/dashboard/rooms/page": [
+    "/(dashboard)/dashboard/offers/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(dashboard)/dashboard/rooms/page.js"
+      "static/chunks/app/(dashboard)/dashboard/offers/page.js"
     ]
   }
 }

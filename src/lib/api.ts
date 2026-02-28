@@ -186,6 +186,12 @@ export const websiteApi = {
   deleteFacility: (websiteId: string, facilityId: string) =>
     api.delete(`/websites/${websiteId}/facilities/${facilityId}`),
 
+  // Contact Info (embedded in hotelInfo)
+  getContactInfo: (websiteId: string) =>
+    api.get(`/websites/${websiteId}/contact-info`),
+  updateContactInfo: (websiteId: string, data: any) =>
+    api.put(`/websites/${websiteId}/contact-info`, data),
+
   // Reviews (embedded in website)
   getReviews: (websiteId: string) =>
     api.get(`/websites/${websiteId}/reviews`),
@@ -195,6 +201,21 @@ export const websiteApi = {
     api.put(`/websites/${websiteId}/reviews/${reviewId}`, data),
   deleteReview: (websiteId: string, reviewId: string) =>
     api.delete(`/websites/${websiteId}/reviews/${reviewId}`),
+  // Contact Messages (stored in ContactMessage collection)
+  getContactMessages: (websiteId: string, page?: number, limit?: number) =>
+    api.get(`/websites/${websiteId}/contact-messages`, { params: { page, limit } }),
+  toggleMessageRead: (websiteId: string, messageId: string) =>
+    api.patch(`/websites/${websiteId}/contact-messages/${messageId}/toggle-read`),
+  deleteContactMessage: (websiteId: string, messageId: string) =>
+    api.delete(`/websites/${websiteId}/contact-messages/${messageId}`),
+
+  // Offer (embedded in website - single)
+  getOffer: (websiteId: string) =>
+    api.get(`/websites/${websiteId}/offer`),
+  updateOffer: (websiteId: string, data: any) =>
+    api.put(`/websites/${websiteId}/offer`, data),
+  deleteOffer: (websiteId: string) =>
+    api.delete(`/websites/${websiteId}/offer`),
 };
 
 // User API

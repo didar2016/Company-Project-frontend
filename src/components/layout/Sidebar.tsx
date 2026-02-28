@@ -21,6 +21,9 @@ import {
   Building,
   Star,
   Loader2,
+  Contact,
+  MailOpen,
+  Tag,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -73,6 +76,24 @@ const menuItems = [
     title: 'Reviews',
     href: '/dashboard/reviews',
     icon: Star,
+    roles: ['admin'],
+  },
+  {
+    title: 'Offers',
+    href: '/dashboard/offers',
+    icon: Tag,
+    roles: ['admin'],
+  },
+  {
+    title: 'Contact Info',
+    href: '/dashboard/contact-info',
+    icon: Contact,
+    roles: ['admin'],
+  },
+  {
+    title: 'Emails',
+    href: '/dashboard/emails',
+    icon: MailOpen,
     roles: ['admin'],
   },
   {
