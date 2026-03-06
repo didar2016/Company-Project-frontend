@@ -30,6 +30,7 @@ const PAGE_OPTIONS: { value: HeroPageType; label: string; description: string }[
   { value: 'roomdetails', label: 'Room Details', description: 'Individual room detail page hero' },
   { value: 'location', label: 'Location', description: 'Location / map page hero' },
   { value: 'dining', label: 'Dining', description: 'Restaurant & dining page hero' },
+  { value: 'meeting', label: 'Meeting', description: 'Meeting rooms & events page hero' },
 ];
 
 interface FormState {

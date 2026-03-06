@@ -1,7 +1,7 @@
 ﻿import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { toast } from '@/hooks/use-toast';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 // Create axios instance
 const api: AxiosInstance = axios.create({
@@ -216,6 +216,14 @@ export const websiteApi = {
     api.put(`/websites/${websiteId}/offer`, data),
   deleteOffer: (websiteId: string) =>
     api.delete(`/websites/${websiteId}/offer`),
+
+  // Meeting (embedded in website - single)
+  getMeeting: (websiteId: string) =>
+    api.get(`/websites/${websiteId}/meeting`),
+  updateMeeting: (websiteId: string, data: any) =>
+    api.put(`/websites/${websiteId}/meeting`, data),
+  deleteMeeting: (websiteId: string) =>
+    api.delete(`/websites/${websiteId}/meeting`),
 };
 
 // User API

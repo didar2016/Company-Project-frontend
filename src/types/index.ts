@@ -53,7 +53,7 @@ export interface SiteSettings {
 }
 
 // Hero Section type (embedded in Website)
-export type HeroPageType = 'home' | 'facilities' | 'about' | 'contact' | 'room' | 'roomdetails' | 'location' | 'dining';
+export type HeroPageType = 'home' | 'facilities' | 'about' | 'contact' | 'room' | 'roomdetails' | 'location' | 'dining' | 'meeting';
 
 export interface HeroSection {
   _id: string;

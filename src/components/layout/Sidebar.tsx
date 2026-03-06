@@ -23,7 +23,7 @@ import {
   Loader2,
   Contact,
   MailOpen,
-  Tag,
+  Tag 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -82,6 +82,12 @@ const menuItems = [
     title: 'Offers',
     href: '/dashboard/offers',
     icon: Tag,
+    roles: ['admin'],
+  },
+   {
+    title: 'Meeting',
+    href: '/dashboard/meeting',
+    icon: Users,
     roles: ['admin'],
   },
   {
