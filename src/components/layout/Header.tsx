@@ -37,8 +37,7 @@ export function Header({ title, breadcrumbs }: HeaderProps) {
         {title && <h1 className="text-xl font-semibold">{title}</h1>}
       </div>
 
-      <div className="flex items-center gap-4">
-        {/* Search */}
+      {/* <div className="flex items-center gap-4">
         <div className="relative hidden md:block">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -48,7 +47,6 @@ export function Header({ title, breadcrumbs }: HeaderProps) {
           />
         </div>
 
-        {/* Website name for admin users */}
         {user?.role === 'admin' && user.websiteName && (
           <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm">
             <span className="w-2 h-2 rounded-full bg-primary" />
@@ -56,7 +54,6 @@ export function Header({ title, breadcrumbs }: HeaderProps) {
           </div>
         )}
 
-        {/* Notifications */}
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-destructive-foreground text-[10px] flex items-center justify-center">
@@ -64,7 +61,6 @@ export function Header({ title, breadcrumbs }: HeaderProps) {
           </span>
         </Button>
 
-        {/* User menu */}
         <Button variant="ghost" size="icon" className="rounded-full">
           {user?.avatar ? (
             <Image
@@ -79,7 +75,33 @@ export function Header({ title, breadcrumbs }: HeaderProps) {
             <User className="h-5 w-5" />
           )}
         </Button>
-      </div>
+      </div> */}
+
+
+<div className="flex items-center gap-4">
+    {user?.role === 'admin' && user.websiteName && (
+          <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm">
+            <span className="w-2 h-2 rounded-full bg-primary" />
+            {user.websiteName}
+          </div>
+        )}
+        <Button variant="ghost" size="icon" className="rounded-full">
+          {user?.avatar ? (
+            <Image
+              src={user.avatar}
+              alt={user.name}
+              width={80}
+              height={80}
+              quality={90}
+              className="h-8 w-8 rounded-full object-cover"
+            />
+          ) : (
+            <User className="h-5 w-5" />
+          )}
+        </Button>
+</div>
+
+
     </header>
   );
 }

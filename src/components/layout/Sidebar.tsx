@@ -125,6 +125,8 @@ export function Sidebar() {
     window.location.href = '/login';
   };
 
+
+
   return (
     <aside
       className={cn(
@@ -136,8 +138,16 @@ export function Sidebar() {
       <div className="flex items-center justify-between p-4 border-b">
         {!collapsed && (
           <Link href="/dashboard" className="flex items-center space-x-2">
-            <Building2 className="h-8 w-8 text-primary" />
-            <span className="font-bold text-xl">HotelHub</span>
+            <img src="https://menahotelgroup.com/wp-content/uploads/2024/08/Mena-logo-1-1.png" alt="Logo" className="h-10 w-12 bg-black" />
+
+
+             {user?.role === 'admin' && user.websiteName ? (
+          <div className="font-bold text-xl">
+            {user.websiteName}
+          </div>
+        ):(
+            <span className="font-bold text-xl">Company Project</span>
+        )}
           </Link>
         )}
         <Button
