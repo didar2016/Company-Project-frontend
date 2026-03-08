@@ -1,4 +1,4 @@
-// File: D:\company dashboard\frontend\src\app\(dashboard)\layout.tsx
+// File: F:\Didar\New folder\Company-Project-frontend\src\app\(dashboard)\layout.tsx
 import * as entry from '../../../../src/app/(dashboard)/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
